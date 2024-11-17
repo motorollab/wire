@@ -917,46 +917,7 @@ do
 			end
 		end
 
-		local function buildPrettyList()
-			local function padLeft( str, len ) return (" "):rep( len - #str ) .. str end
-			local function padRight( str, len ) return str .. (" "):rep( len - #str ) end
-			local function padCenter( str, len ) return padRight( padLeft( str, math.floor( (len + #str) / 2 ) ), len ) end
-
-			local list, column1, column2, columnsWidth = extensions.list, {}, {}, 0
-			for i = 1, #list do
-				local name = list[ i ]
-				if #name > columnsWidth then columnsWidth = #name end
-				if extensions.status[ name ] == true then column1[ #column1 + 1 ] = name else column2[ #column2 + 1 ] = name end
-			end
-			local mainTitle, column1Title, column2Title = "E2 EXTENSIONS", "ENABLED", "DISABLED"
-			local maxWidth, maxRows = math.max( columnsWidth * 2, #column1Title + #column2Title, #mainTitle - 3 ), math.max( #column1, #column2 )
-			if maxWidth % 2 ~= 0 then maxWidth = maxWidth + 1 end
-			columnsWidth = maxWidth / 2
-			maxWidth = maxWidth + 3
-			local delimiter =  " +-" .. ("-"):rep( columnsWidth ) .. "-+-" .. ("-"):rep( columnsWidth ) .. "-+"
-
-			list =
-			{
-				" +-" .. ("-"):rep( maxWidth ) .. "-+",
-				" | " .. padCenter( mainTitle, maxWidth ) .. " |",
-				delimiter,
-				" | " .. padCenter( column1Title, columnsWidth ) .. " | " .. padCenter( column2Title, columnsWidth ) .. " |",
-				delimiter,
-			}
-			for i = 1, maxRows do list[ #list + 1 ] = " | " .. padRight( column1[ i ] or "", columnsWidth ) .. " | " .. padRight( column2[ i ] or "", columnsWidth ) .. " |" end
-			list[ #list + 1 ] = delimiter
-
-			extensions.prettyList = list
-		end
-
 		function printExtensions( ply, str )
-			if IsValid( ply ) then
-				if str then ply:PrintMessage( 2, str ) end
-				for i = 1, #extensions.prettyList do ply:PrintMessage( 2, extensions.prettyList[ i ] ) end
-			else
-				if str then print( str ) end
-				for i = 1, #extensions.prettyList do print( extensions.prettyList[ i ] ) end
-			end
 		end
 
 		function conCommandSetExtensionStatus( ply, cmd, args )
@@ -1003,7 +964,6 @@ do
 		function wire_expression2_PostLoadExtensions()
 			table.sort( extensions.list, function( a, b ) return a < b end )
 			E2Lib.UpdateClientsideExtensionsList()
-			buildPrettyList()
 			if not wire_expression2_is_reload then -- only print once on startup, not on each reload.
 				printExtensions()
 			end
