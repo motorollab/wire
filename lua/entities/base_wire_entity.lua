@@ -11,6 +11,7 @@ ENT.IsWire = true
 
 if CLIENT then
 	local wire_drawoutline = CreateClientConVar("wire_drawoutline", 1, true, false)
+	local wire_drawentities = CreateClientConVar("wire_drawentities", 1, true, false)
 
 	function ENT:Initialize()
 		self.NextRBUpdate = CurTime() + 0.25
@@ -246,37 +247,19 @@ if CLIENT then
 		return trbool
 	end
 
-	local looked_at
-
-	-- Shared by all derivative entities to determine if the overlay should be visible
-	hook.Add("Think", "wire_base_lookedatbylocalplayer", function()
-		local ply = LocalPlayer()
-		if not IsValid(ply) then
-			looked_at = nil
-			return
-		end
-
-		local cur_ent = ply:GetEyeTrace().Entity
-
-		if cur_ent ~= looked_at and IsValid(looked_at) and looked_at.IsWire then
-			looked_at:BeingLookedAtByLocalPlayer()
-		end
-
-		if IsValid(cur_ent) and cur_ent.IsWire and cur_ent:BeingLookedAtByLocalPlayer() then
-			looked_at = cur_ent
-		else
-			looked_at = nil
-		end
-	end)
-
 	function ENT:DoNormalDraw(nohalo, notip)
-		if not nohalo and wire_drawoutline:GetBool() and looked_at == self then
-			self:DrawEntityOutline()
-			self:DrawModel()
-		else
-			self:DrawModel()
+		local looked_at = self:BeingLookedAtByLocalPlayer()
+		if not looked_at then
+			return wire_drawentities:GetBool() and self:DrawModel()
 		end
-		if not notip and looked_at == self then
+
+		if not nohalo and wire_drawoutline:GetBool() then
+			self:DrawEntityOutline()
+		end
+
+		self:DrawModel()
+
+		if not notip then
 			self:AddWorldTip()
 		end
 	end
